@@ -13,9 +13,10 @@ const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
 
-    const [booterApikey, setBooterApikey] = useState('13f1cffe6a828d73bd7f7bf6-28097a6a');
+    const [loader, setLoader] = useState(false);
 
-    const [upDownApikey, setUpDownApikey] = useState('SV67GruC8uVxPJPYtBhy');
+    const [booterApikey, setBooterApikey] = useState(''); //'13f1cffe6a828d73bd7f7bf6-28097a6a'
+    const [upDownApikey, setUpDownApikey] = useState(''); //'SV67GruC8uVxPJPYtBhy'
     const [upDownAccountName, setUpDownAccountName] = useState(null);
 
 
@@ -39,6 +40,7 @@ export default function Home() {
     //--------------------------------------
     const handleAdd = async (formData) => {
         console.log(formData);
+        setLoader(true); //show loader
         try {
             // send attack request
             const booterInfo = await fetch('api/sendBooterRequest', {
@@ -74,16 +76,23 @@ export default function Home() {
             formData.updownToken = json.token;
             console.log(json)
             console.log(formData)
-            setItems([...items, formData]);
+            const newItems = [...items, formData];
+            setItems(newItems);
+            setItemsToItemsJsonFile(newItems);
+
+            setLoader(false); // hide loader
         } catch (error) {
             console.log(error);
+            setLoader(false);
         }
     }
 
     // update 
     //--------------------------------------
     const handleUpdate = (id, formData) => {
-        setItems(items.map(item => item.id === id ? formData : item));
+        const newItems = items.map(item => item.id === id ? formData : item);
+        setItems(newItems);
+        setItemsToItemsJsonFile(newItems);
     }
 
 
@@ -121,8 +130,9 @@ export default function Home() {
             });
             const json = await data.json();
 
-
-            setItems(items.filter(item => item.id !== id));
+            const newItems = items.filter(item => item.id !== id)
+            setItems(newItems);
+            setItemsToItemsJsonFile(newItems);
             console.log(items);
         } catch (error) {
             console.log(error);
@@ -131,27 +141,41 @@ export default function Home() {
 
 
     // on api key added or changed
+    // if api key is not null
     useEffect(() => {
-        // if api key is not null
         if (upDownApikey) {
-            // get account info
             getUpDownAccountInfo(upDownApikey).then(data => {
                 setUpDownAccountName(data[0].name);
             });
+
+            // save api key on local storage
+            localStorage.setItem('upDownApikey', upDownApikey);
+
         }
     }, [upDownApikey]);
 
+    // if api key is not null
+    // get account info
     useEffect(() => {
-        // if api key is not null
         if (booterApikey) {
-            // get account info
             console.log(booterApikey);
+            // save api key on local storage
+            localStorage.setItem('booterApikey', booterApikey);
         }
     }, [booterApikey]);
 
 
-    // get items from items.json
-    useEffect(() => {
+    // on init the page
+    //----------------------------------------------------
+    useEffect(()=>{
+        // get api keys
+        const booterApikey = localStorage.getItem('booterApikey');
+        if(booterApikey) setBooterApikey(booterApikey);
+        const upDownApikey = localStorage.getItem('upDownApikey');
+        if(upDownApikey) setUpDownApikey(upDownApikey);
+
+
+        // get all items from items.json
         fetch('api/itemsGetter', {
             method: 'POST',
             headers: {
@@ -160,11 +184,12 @@ export default function Home() {
         }).then(res => res.json()).then(data => {
             setItems(data);
         });
+
     }, []);
 
+
     // set items to items.json
-    useEffect(() => {
-        if (items.length === 0) return;
+    function setItemsToItemsJsonFile(items){
         fetch('api/itemsSetter', {
             method: 'POST',
             headers: {
@@ -172,7 +197,7 @@ export default function Home() {
             },
             body: JSON.stringify(items),
         }).then(res => res.json()).then(data => {})
-    }, [items]);
+    }
   
   
 
@@ -186,7 +211,7 @@ export default function Home() {
             </Head>
             <main>
                 <label htmlFor="upDownApiKey">updown api key</label>
-                <input id='upDownApiKey' type="text" placeholder='updown api key' onChange={(e)=> setUpDownApikey(e.target.value)} />
+                <input id='upDownApiKey' type="text" placeholder='updown api key' value={upDownApikey} onChange={(e)=> setUpDownApikey(e.target.value)} />
                 {
                     upDownAccountName === null?
                     <strong style={{color: 'red'}}> Account Not Connected </strong>
@@ -195,10 +220,14 @@ export default function Home() {
                 
                 <br />
                 <label htmlFor="booterApiKey">booter api key</label>
-                <input id='booterApiKey' type="text" placeholder='booter api key' onChange={(e)=> setBooterApikey(e.target.value)} />
+                <input id='booterApiKey' type="text" placeholder='booter api key' value={booterApikey} onChange={(e)=> setBooterApikey(e.target.value)} />
 
                 <h1>add item</h1>
-                <Form onSubmit={handleAdd} />
+                <Form 
+                    onSubmit={handleAdd}
+                    upDownApikey={upDownApikey} 
+                    booterApikey={booterApikey}
+                    loader={loader}  />
 
                 <h1>all items</h1>
                 <ul>
