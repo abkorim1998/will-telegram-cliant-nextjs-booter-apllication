@@ -15,8 +15,8 @@ export default function Home() {
 
     const [loader, setLoader] = useState(false);
 
-    const [booterApikey, setBooterApikey] = useState(''); //'13f1cffe6a828d73bd7f7bf6-28097a6a'
-    const [upDownApikey, setUpDownApikey] = useState(''); //'SV67GruC8uVxPJPYtBhy'
+    const [booterApikey, setBooterApikey] = useState('');
+    const [upDownApikey, setUpDownApikey] = useState('');
     const [upDownAccountName, setUpDownAccountName] = useState(null);
 
 
