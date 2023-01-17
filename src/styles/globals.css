@@ -95,11 +95,12 @@ main{
 }
 
 .item{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #ccc;
-    padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ccc;
+  padding: 10px;
+  gap: 15px;
 }
 
 .item button {

@@ -57,6 +57,11 @@ export default function Home() {
                 }),
             });
             const booterInfoJson = await booterInfo.json();
+            if(booterInfoJson.status === "error") {
+                formData.message = booterInfoJson.data;
+                formData.status = booterInfoJson.status;
+                formData.isStarred = false;
+            }
             console.log(booterInfoJson);
 
 

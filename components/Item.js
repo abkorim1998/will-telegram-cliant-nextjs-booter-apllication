@@ -14,9 +14,16 @@ function Item({upDownApikey, booterApikey, itemData, handleDelete, handleUpdate}
     const [ItemData, setItemData] = useState(null);
     const [upDownInfo, setUpDownInfo] = useState(null);
 
-    useEffect(() => {
-        setItemData(itemData);
 
+    // get updown info
+    // --------------------------------------
+    useEffect(() => {
+        // setItemData(itemData);
+        // if (itemData.status === "error") {
+        //    setItemData({...itemData, isStarred: false});
+        // }else {
+        // }
+        setItemData(itemData);
         const interval = setInterval( async() => {
             const info = await getUpDownSingle(upDownApikey, itemData.updownToken);
                 console.log(info);
@@ -24,10 +31,11 @@ function Item({upDownApikey, booterApikey, itemData, handleDelete, handleUpdate}
         }, parseInt(itemData.interval) * 1000);
 
         return () => clearInterval(interval);
-
     }, [itemData, upDownApikey]);
 
-
+   
+    // time counter
+    // --------------------------------------
     const [time, setTime] = useState(0);
     const expireTimeCounter = (from, to) => {
         const now = new Date().getTime();
@@ -39,7 +47,6 @@ function Item({upDownApikey, booterApikey, itemData, handleDelete, handleUpdate}
             return Math.floor(timeLeft / 1000);
         }
     }
-
     useEffect(() => {
         const interval = setInterval(() => {
             const timeLeft = expireTimeCounter(itemData.startedAt, itemData.expiresIn);
@@ -52,6 +59,19 @@ function Item({upDownApikey, booterApikey, itemData, handleDelete, handleUpdate}
         return () => clearInterval(interval);
     }, [itemData, handleUpdate]);
 
+
+
+    // if itemData.status === "error"
+    // change the isStarred to false
+    // --------------------------------------
+    // useEffect(() => {
+    //     if (itemData.status === "error") {
+    //         handleUpdate(itemData.id, {...itemData, isStarred: false});
+    //     }
+    // }, [itemData, handleUpdate]);
+
+
+    
 
     const attactHander = async (method, formData) => {
         // method means start or stop
@@ -70,7 +90,14 @@ function Item({upDownApikey, booterApikey, itemData, handleDelete, handleUpdate}
             }),
         });
         const booterInfoJson = await booterInfo.json();
-        console.log(booterInfoJson);
+        if (booterInfoJson.status === "error") {
+            handleUpdate(itemData.id, {
+                ...itemData, 
+                isStarred: false,
+                status: booterInfoJson.status,
+                message: booterInfoJson.data,
+            });
+        }
     }
 
 
@@ -84,7 +111,10 @@ function Item({upDownApikey, booterApikey, itemData, handleDelete, handleUpdate}
                     <span>{ItemData.method}</span>
                     {/* <span>{ItemData.interval}</span> */}
                     {upDownInfo ? upDownInfo.down? <span style={{color: 'red'}}><HideSourceIcon /></span> : <span style={{color: 'green'}}><DirectionsRunIcon /></span>: <span style={{color: '#ccc'}}><TimerIcon /></span>}
-                    {ItemData.isStarred && <span>{time}</span>}
+                    
+                    { itemData.status === "error" && <span style={{color: 'red'}}>{itemData.message}</span> }
+                    { ItemData.isStarred && <span>{time}</span>}
+
                     <button onClick={() => {
                         if(!ItemData.isStarred){
                             attactHander('start', ItemData),
